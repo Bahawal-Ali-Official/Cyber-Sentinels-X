@@ -1,3 +1,4 @@
+import subprocess
 import sys
 import time
 import socket
@@ -89,17 +90,21 @@ def phishing_check():
 
 def web_pentest():
     speak("Web Pentest mode.")
-    url = input(Fore.WHITE + "\n[?] Enter Website URL: ")
-    paths = ["/admin", "/login", "/config"]
-    print(Fore.CYAN + "\n[*] Brute-forcing directories...")
-    for path in paths:
-        print(Fore.YELLOW + f"[~] Checking {url}{path}...", end="\r")
-        time.sleep(0.5)
-        if path == "/login":
-             print(Fore.GREEN + f"[+] FOUND: {url}{path} (200 OK)   ")
-        else:
-             print(Fore.RED + f"[-] MISSING: {url}{path} (404)    ")
-    speak("Directory scan finished.")
+    speak("Engaging Advanced Web Reconnaissance Module.")
+    print(Fore.CYAN + "\n[*] LOADING EXTERNAL MODULE: RECON.PY ...")
+    time.sleep(1)
+    try:
+        subprocess.run([sys.executable, "recon.py"])
+    except FileNotFoundError:
+        print(Fore.RED + "\n[!] CRITICAL ERROR: 'recon.py' not found in the same directory!")
+        speak("Error. Recon module missing.")
+    except KeyboardInterrupt:
+        print(Fore.YELLOW + "\n[!] Module execution interrupted by user.")
+    except Exception as e:
+        print(Fore.RED + f"\n[!] UNEXPECTED ERROR: {e}")
+    print(Fore.GREEN + "\n[*] RETURNING TO SENTINEL-X KERNEL...")
+    time.sleep(1)
+    speak("Web recon module deactivated. Returning to main menu.")
 
 def network_sniffer():
     speak("Sniffing network traffic.")
@@ -214,4 +219,5 @@ def main():
             break
 
 if __name__ == "__main__":
+
     main()
