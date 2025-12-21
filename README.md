@@ -1,4 +1,4 @@
-🚀 Sentinel-X | Elite Network Security Framework
+# 🚀 Sentinel-X | Elite Network Security Framework
 
 Sentinel-X is a high-performance, automated network exploitation and OSINT framework. It seamlessly orchestrates Bettercap and Mitmproxy to perform stealthy interception, SSL stripping, and deep packet analysis through a single command-line interface.
 🛡️ Key Modules
@@ -20,7 +20,7 @@ Sentinel-X simplifies complex network attacks into an automated 4-step sequence:
 
     Exfiltration: Automatically archives logs and raw flows into the sentinel_vault/.
 
-✨ Advanced Features
+# ✨ Advanced Features
 
     SSLStrip Integration: Automatically attempts to downgrade HTTPS connections to intercept plaintext data.
 
@@ -30,32 +30,28 @@ Sentinel-X simplifies complex network attacks into an automated 4-step sequence:
 
     Visual Dashboard: Real-time attack monitoring with custom color-coded status indicators.
 
-⚙️ Quick Start
-1. Prerequisites
+# ⚙️ Quick Start
+### 1. Prerequisites
 
 Ensure you are using Kali Linux, Parrot OS, or any Debian-based system.
-Bash
 
 sudo apt update && sudo apt install bettercap mitmproxy iptables python3-pip -y
 
-2. Installation
+### 2. Installation
 
 Clone the repository and install the Python dependencies:
-Bash
 
 git clone https://github.com/yourusername/sentinel-x.git
 cd sentinel-x
 pip install -r requirements.txt
 
-3. Execution
+### 3. Execution
 
 Launch the framework with root privileges (required for network socket manipulation):
-Bash
 
 sudo python3 main.py
 
-📂 Project Structure
-Plaintext
+## 📂 Project Structure
 
 Sentinel-X/
 ├── main.py              # Main Orchestrator & UI
@@ -63,6 +59,6 @@ Sentinel-X/
 ├── requirements.txt     # Python Dependencies
 └── README.md            # Documentation
 
-⚠️ Legal Disclaimer
+# ⚠️ Legal Disclaimer
 
 For Educational Use Only. Sentinel-X is designed for authorized penetration testing and security auditing. The developer is not responsible for any unauthorized use or damage. Use this tool ethically and always obtain permission before testing.
