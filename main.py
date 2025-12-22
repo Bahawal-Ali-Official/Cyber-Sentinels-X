@@ -44,7 +44,7 @@ def banner():
     ╚════██║██╔══╝  ██║╚██╗██║   ██║   ██║██║╚██╗██║██╔══╝  ██║           ██╔██╗ 
     ███████║███████╗██║ ╚████║   ██║   ██║██║ ╚████║███████╗███████╗██╗ ██╔╝  ██╗
     ╚══════╝╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝╚═╝ ╚═╝   ╚═╝
-                                            [ Powered by: CyberOps ]
+                                [ Powered by: CyberOps ]
     """
     print(Fore.CYAN + Style.BRIGHT + logo)
     speak("Sentinel X interface loaded.")
@@ -368,33 +368,115 @@ def mitm_simulation():
 
 # ---------------------------------------------------------------- 6. REAL MULTI-THREADED PORT SCANNER --------------------------------------------------------------
 def port_scanner():
-    speak("Port Scanner initialized.")
+    import socket
+    import sys
+    import threading
+    from datetime import datetime
+    from concurrent.futures import ThreadPoolExecutor
+    try:
+        from colorama import Fore, Style, init
+        init(autoreset=True)
+    except:
+        pass
+
+    # --- Banner ---
+    print(Fore.RED + Style.BRIGHT + r"""
+        / \__
+       (    @\___   [ SYSTEM BREACH: PORT SENTRY ACTIVATED ]
+       /         O  [ TARGETING: ALL PORTS (1-65535)       ]
+      /   (_____/   [ MODE: AGGRESSIVE                     ]
+     /_____/   U
+    """)
+
+    # --- Input ---
+    try: speak("Port Scanner initialized.")
+    except: pass
+    
     target = input(Fore.WHITE + "\nroot@sentinel:~/nmap# Enter Target IP: ")
     
-    print(Fore.CYAN + f"\n[*] Bombarding {target} with packets...")
-    
-    active_ports = []
+    # --- Scan Header ---
+    start_time = datetime.now()
+    print(Fore.WHITE + f"\nStarting Nmap 7.94 at {start_time.strftime('%Y-%m-%d %H:%M')}")
+    print(f"Nmap scan report for {target}")
+    print(Fore.YELLOW + "Scanning 65535 ports... (This will take time)")
 
-    def scan_port(port):
+    scanned_count = 0
+    total_ports = 65535
+    print_lock = threading.Lock()
+
+    open_ports = []
+
+    # --- Scan Logic ---
+    def scan(port):
+        nonlocal scanned_count
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(0.5)
+            s.settimeout(0.4) 
             if s.connect_ex((target, port)) == 0:
-                sys.stdout.write(Fore.GREEN + f"\r[+] Found Open Port: {port}   \n")
-                active_ports.append(port)
+                try: service = socket.getservbyport(port)
+                except: service = "unknown"
+                open_ports.append({'port': port, 'service': service})
             s.close()
         except: pass
-    threads = []
-    for port in range(1, 101):
-        t = threading.Thread(target=scan_port, args=(port,))
-        threads.append(t)
-        t.start()
+
+        with print_lock:
+            scanned_count += 1
+        
+            if scanned_count % 500 == 0 or scanned_count == total_ports:
+                percent = (scanned_count / total_ports) * 100
+                bar_length = 40
+                filled = int(bar_length * scanned_count // total_ports)
+                bar = "#" * filled + "-" * (bar_length - filled)
+                
+                # Progress
+                sys.stdout.write(f"\r{Fore.CYAN}[{bar}] {percent:.1f}%{Style.RESET_ALL}")
+                sys.stdout.flush()
+
+    # --- Multi-threading (Scanning 1-65535) ---
+    with ThreadPoolExecutor(max_workers=500) as executor:
+        executor.map(scan, range(1, 65536))
+
+    # --- Output ---
+    open_ports.sort(key=lambda x: x['port'])
+    sys.stdout.write("\r" + " "*60 + "\r") # Clear loading line
+
+    if open_ports:
+        print(Fore.WHITE + "PORT".ljust(10) + "STATE".ljust(10) + "SERVICE")
+        for item in open_ports:
+            print(Fore.GREEN + f"{item['port']}/tcp".ljust(10) + "open".ljust(10) + item['service'])
+    else:
+        print(Fore.RED + "All 65535 ports are closed/filtered.")
+
+    # --- Footer ---
+    duration = (datetime.now() - start_time).total_seconds()
+    print(Fore.WHITE + f"\nNmap done: 1 IP address scanned in {duration:.2f} seconds")
     
-    for t in threads: t.join()
+    try: speak("Scan completed.")
+    except: pass
+    input("\nPress Enter to return...")
+
+# ---------------------------------------------------------------- 6. System Moniter --------------------------------------------------------------
+
+def system_moniter():
     
-    if not active_ports:
-        log("No open ports found or firewall active.", "WARN")
-    speak("Port scan finished.")
+    # Launches the external System Integrity Monitor script.
+    
+    print(f"\n{Fore.CYAN}[*] INITIALIZING SUB-SYSTEM LINK...{Style.RESET_ALL}")
+      
+    target_file = "moniter.py" 
+    
+    # Check if file exists
+    if not os.path.exists(target_file):
+        print(f"{Fore.RED}[!] ERROR: TARGET MODULE '{target_file}' NOT FOUND.{Style.RESET_ALL}")
+        return
+
+    try:
+        subprocess.run([sys.executable, target_file])
+    except KeyboardInterrupt:
+        print(f"\n{Fore.YELLOW}[!] MODULE TERMINATED BY USER.{Style.RESET_ALL}")
+    except Exception as e:
+        print(f"{Fore.RED}[!] EXECUTION FAILED: {e}{Style.RESET_ALL}")
+
 
 def main():
     
@@ -407,7 +489,8 @@ def main():
         print(Fore.YELLOW + "4. Network Sniffer     " + Fore.WHITE + "(Live Packet Capture)")
         print(Fore.YELLOW + "5. LAN Scanner (MitM)  " + Fore.WHITE + "(ARP Device Discovery)")
         print(Fore.YELLOW + "6. Port Scanner        " + Fore.WHITE + "(Multi-threaded)")
-        print(Fore.YELLOW + "7. Exit")
+        print(Fore.YELLOW + "7. System Moniter      " + Fore.WHITE + "(Host Defense & Integrity Audit)")
+        print(Fore.YELLOW + "8. Exit")
         
         choice = input(Fore.RED + "\nroot@sentinel:~# ")
         
@@ -417,7 +500,8 @@ def main():
         elif choice == '4': network_sniffer()
         elif choice == '5': mitm_simulation()
         elif choice == '6': port_scanner()
-        elif choice == '7': 
+        elif choice == '7': system_moniter()
+        elif choice == '8': 
             speak("System shutting down.")
             sys.exit()
         else:
@@ -425,7 +509,6 @@ def main():
 
 if __name__ == "__main__": 
     main()
-
 
 
 
