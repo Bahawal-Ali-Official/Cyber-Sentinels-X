@@ -37,6 +37,7 @@ Sentinel-X simplifies complex network attacks into an automated 4-step sequence:
 Ensure you are using Kali Linux, Parrot OS, or any Debian-based system.
 
 ```sudo apt update && sudo apt install bettercap mitmproxy iptables python3-pip -y```
+```sudo apt update && sudo apt install espeak-ng libespeak-ng-dev -y```
 
 ### 2. Installation
 
