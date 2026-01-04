@@ -56,7 +56,7 @@ Clone the repository and install the dependencies. The framework includes a spec
 
 ```bash
 git clone https://github.com/rehan-qx/Cyber-Sentinels-X
-cd sentinel-x
+cd Cyber-Sentinels-X
 pip install -r requirements.txt
 bash install.sh
 sed -i 's/\r$//' main.py 
